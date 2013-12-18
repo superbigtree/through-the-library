@@ -17,8 +17,6 @@
     "crtrdg-mouse": "0.0.3",
     "crtrdg-gameloop": "~0.1.0",
     "crtrdg-entity": "0.0.8",
-    "buffet": "~0.6.0",
-    "lodash.template": "~2.4.1",
     "crtrdg-goal": "0.0.0",
     "crtrdg-scene": "0.0.2"
   },

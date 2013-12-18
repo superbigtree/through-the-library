@@ -1,5 +1,3 @@
-var template = require('lodash.template');
-
 module.exports = Log;
 
 function Log(id){
