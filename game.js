@@ -5,6 +5,8 @@
 var Game = require('crtrdg-gameloop');
 var Mouse = require('crtrdg-mouse');
 var Keyboard = require('crtrdg-keyboard');
+var Scene = require('crtrdg-scene');
+var Goal = require('crtrdg-goal');
 
 
 /*
