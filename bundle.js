@@ -6,7 +6,7 @@
 var Game = require('crtrdg-gameloop');
 var Mouse = require('crtrdg-mouse');
 var Keyboard = require('crtrdg-keyboard');
-var Scene = require('crtrdg-scene');
+var Scenes = require('crtrdg-scene');
 var Goal = require('crtrdg-goal');
 
 
@@ -14,6 +14,7 @@ var Goal = require('crtrdg-goal');
 * custom modules
 */
 
+var Players = require('./players');
 var Log = require('./ui/log');
 var Terminal = require('./ui/terminal');
 var randomInt = require('./util/math').randomInt;
@@ -31,29 +32,13 @@ var game = new Game({
   backgroundColor: randomRGBA(0, 256, 0, 256, 0, 256, 0.3)
 });
 
-var keyboard = new Keyboard(game);
-
-game.on('update', function(interval){
-  box.update(interval);
-})
+game.on('update', function(interval){});
 
 var size = 5;
 var columns = game.width / size;
 var rows = game.height / size;
 
 game.on('draw', function(c){
-
-  //for (var h=0; h<rows; h+=randomInt(5, 20)){
-    //c.save();
-    //c.globalCompositeOperation = 'source-over';
-    //c.translate(game.width / 2, 0);
-    //c.rotate(Math.PI / randomInt(120, 180));
-    //c.fillStyle = randomRGBA(200, 255, 200, 255, 200, 255, 0.3);
-    //c.fillRect(-game.width/2, size*h-30, game.width+100, randomInt(1, 80));
-    //c.restore();
-  //}
-
-
   for (var h=0; h<rows; h+=randomInt(5, 20)){
     c.save();
     c.translate(game.width / 2, 0);
@@ -63,56 +48,18 @@ game.on('draw', function(c){
     c.restore();
   }
 
-  box.draw(c);
-
   for (var w=0; w<columns; w+=randomInt(5, 20)){
     c.fillStyle = randomRGBA(100, 255, 100, 200, 100, 211, .6);
     c.fillRect(size*w, randomInt(0, game.height), randomInt(1, 3), randomInt(1, 3));    
   }
-
-  
 });
 
-var box = {
-  x: 0,
-  y: 0,
-  width: 40,
-  height: 40,
-  speed: 22,
-  color: randomRGBA(15, 255, 15, 255, 15, 255, .95)
-}
-
-box.draw = function(c){
-  for (var w=0; w<3; w++){
-    c.save();
-    c.translate(box.x, box.y)
-    c.rotate(Math.PI/180 * randomInt(-180, 180));
-    c.fillStyle = randomRGBA(255, 255, 255, 255, 15, 255, .25);
-    c.fillRect(-box.width/2, -box.height/2, box.width, box.height);
-    c.restore();
-  }
-
-}
-
-box.update = function(interval){
-
-  if ('W' in keyboard.keysDown) box.y -= box.speed;
-  if ('S' in keyboard.keysDown) box.y += box.speed;
-  if ('A' in keyboard.keysDown) box.x -= box.speed;
-  if ('D' in keyboard.keysDown) box.x += box.speed;
-
-
-  //if (box.x < 0) box.x = 0;
-  //if (box.y < 0) box.y = 0;
-  //if (box.x >= game.width - box.w) box.x = game.width - box.w;
-  //if (box.y >= game.height - box.h) box.y = game.height - box.h;
-}
 
 /*
 * create player characters
 */
 
-var players = {
+var players = new Players({
   eika: {
     name: 'eika',
     log: new Log('log-eika')
@@ -121,21 +68,7 @@ var players = {
     name: 'fullerton',
     log: new Log('log-fullerton')
   }
-};
-
-var currentPlayer = players.eika;
-playerElUpdate(currentPlayer);
-
-function switchPlayer(){
-  if (currentPlayer.name === 'eika') currentPlayer = players.fullerton;
-  else currentPlayer = players.eika;
-  playerElUpdate(currentPlayer);
-}
-
-function playerElUpdate(player){
-  var el = document.getElementById('terminal-player');
-  el.innerHTML = player.name;
-}
+});
 
 
 /*
@@ -145,12 +78,12 @@ function playerElUpdate(player){
 var terminal = new Terminal();
 
 terminal.on('command', function(message, command, option){
-  currentPlayer.log.add(message);
-  switchPlayer();
+  players.active.log.add('<b>' + players.active.name + ':</b> ' + message);
+  players.switch();
   var color = randomRGBA(0, 256, 0, 256, 0, 256, 0.2);
   game.backgroundColor = color;
 });
-},{"./ui/log":29,"./ui/terminal":30,"./util/math":31,"crtrdg-gameloop":3,"crtrdg-goal":5,"crtrdg-keyboard":6,"crtrdg-mouse":8,"crtrdg-scene":9}],2:[function(require,module,exports){
+},{"./players":29,"./ui/log":30,"./ui/terminal":31,"./util/math":32,"crtrdg-gameloop":3,"crtrdg-goal":5,"crtrdg-keyboard":6,"crtrdg-mouse":8,"crtrdg-scene":9}],2:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -1724,6 +1657,50 @@ function values(object) {
 module.exports = values;
 
 },{"lodash.keys":21}],29:[function(require,module,exports){
+var Log = require('./ui/log');
+
+module.exports = Players;
+
+function Players(players){
+  this.players = players;
+  this.active = {};
+  this.terminalName = document.getElementById('terminal-player');
+  this.switch(this.players['eika']);
+}
+
+
+Players.prototype.get = function(name){
+  return this.players[name];
+}
+
+
+Players.prototype.switch = function(){
+  if (this.active.name === 'eika') this.active = this.get('fullerton');
+  else this.active = this.get('eika');
+  this.playerElUpdate(this.active.name);
+}
+
+
+Players.prototype.playerElUpdate = function(name){
+  var player = this.active;
+  this.terminalName.innerHTML = name;
+}
+
+
+Players.prototype.setItem = function(name, item){
+
+}
+
+
+Players.prototype.getItem = function(name){
+  
+}
+
+
+Players.prototype.useItem = function(name, room){
+  
+}
+},{"./ui/log":30}],30:[function(require,module,exports){
 var template = require('lodash.template');
 
 module.exports = Log;
@@ -1747,7 +1724,7 @@ Log.prototype.add = function(message){
 Log.prototype.clear = function(){
   if (this.el.querySelectors('li:visible').length === 0) console.log('yep')
 };
-},{"lodash.template":11}],30:[function(require,module,exports){
+},{"lodash.template":11}],31:[function(require,module,exports){
 var EventEmitter = require('events').EventEmitter;
 var inherits = require('inherits');
 
@@ -1792,7 +1769,7 @@ Terminal.prototype.help = function(option){
 Terminal.prototype.location = function(option){
   return 'You are in the whatever';
 }
-},{"events":2,"inherits":10}],31:[function(require,module,exports){
+},{"events":2,"inherits":10}],32:[function(require,module,exports){
 function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1) + min);
 }
